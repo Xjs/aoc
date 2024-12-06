@@ -24,11 +24,12 @@ func part1(g *grid.Grid[rune]) int {
 
 	g.Foreach(func(p grid.Point) {
 		if g.MustAt(p) == search[0] {
-			for _, dir := range directions(p, len(search)) {
+			for _, dir := range directions(p, g, len(search)) {
 				found := true
 				for i, np := range dir {
 					r, err := g.At(np)
 					if err != nil {
+						// This should not happen anymore due to the refactor to use Deltas
 						found = false
 						break
 					}
@@ -48,39 +49,32 @@ func part1(g *grid.Grid[rune]) int {
 }
 
 func part2(g *grid.Grid[rune]) int {
-	type dp struct{ dx, dy int }
-
 	var search = []rune("MAS")
 
 	foundInstances := 0
 
 	g.Foreach(func(p grid.Point) {
 		if g.MustAt(p) == search[1] {
-			points := make(map[dp]rune)
+			points := make(map[grid.Delta]rune)
 			for _, dx := range []int{-1, 1} {
 				for _, dy := range []int{-1, 1} {
-					x := int(p.X) + dx
-					y := int(p.Y) + dy
-					if x < 0 || y < 0 {
-						return
-					}
-
-					pp, err := g.At(grid.P(grid.Coordinate(x), grid.Coordinate(y)))
+					d := grid.D(dx, dy)
+					pp, err := g.Delta(p, d)
 					if err != nil {
 						return
 					}
-					points[dp{dx, dy}] = pp
+					points[grid.D(dx, dy)] = g.MustAt(pp)
 				}
 			}
 
 			// top left
-			tl := points[dp{-1, -1}]
+			tl := points[grid.D(-1, -1)]
 			// top right
-			tr := points[dp{-1, 1}]
+			tr := points[grid.D(-1, 1)]
 			// bottom left
-			bl := points[dp{1, -1}]
+			bl := points[grid.D(1, -1)]
 			// bottom right
-			br := points[dp{1, 1}]
+			br := points[grid.D(1, 1)]
 
 			tl2br := false
 			if tl == search[0] && br == search[2] || tl == search[2] && br == search[0] {
@@ -101,7 +95,7 @@ func part2(g *grid.Grid[rune]) int {
 	return foundInstances
 }
 
-func directions(c grid.Point, length int) [][]grid.Point {
+func directions[T any](c grid.Point, g *grid.Grid[T], length int) [][]grid.Point {
 	var result [][]grid.Point
 
 	for _, dx := range []int{-1, 0, 1} {
@@ -112,14 +106,14 @@ func directions(c grid.Point, length int) [][]grid.Point {
 
 			var dir []grid.Point
 			for i := 0; i < length; i++ {
-				x := int(c.X) + i*dx
-				y := int(c.Y) + i*dy
+				d := grid.D(i*dx, i*dy)
 
-				if x < 0 || y < 0 {
+				pp, err := g.Delta(c, d)
+				if err != nil {
 					break
 				}
 
-				dir = append(dir, grid.P(grid.Coordinate(x), grid.Coordinate(y)))
+				dir = append(dir, pp)
 			}
 
 			if len(dir) < length {

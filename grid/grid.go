@@ -17,6 +17,26 @@ type Point struct {
 	X, Y Coordinate
 }
 
+// Delta is a delta that can be applied to a point.
+type Delta struct {
+	Dx, Dy int
+}
+
+// D constructs a delta from two integers.
+func D(dx, dy int) Delta { return Delta{dx, dy} }
+
+// Delta applies the delta to the given point or returns an out-of-bounds error.
+func (g *Grid[T]) Delta(p Point, d Delta) (Point, error) {
+	x := int(p.X) + d.Dx
+	y := int(p.Y) + d.Dy
+
+	if x < 0 || y < 0 || Coordinate(x) >= g.Width() || Coordinate(y) >= g.Height() {
+		return Point{}, errors.New("out of bounds")
+	}
+
+	return P(Coordinate(x), Coordinate(y)), nil
+}
+
 // P is a convenience constructor for Point.
 func P(x, y Coordinate) Point {
 	return Point{X: x, Y: y}
