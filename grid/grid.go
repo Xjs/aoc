@@ -48,6 +48,8 @@ func ulen[T any](s []T) Coordinate {
 }
 
 // A Grid represents a two-dimensional rectangular grid of Ts.
+// It is thought to start with 0, 0 at the top-left corner,
+// and expand down and to the right with increasing coordinates.
 type Grid[T any] struct {
 	width, height Coordinate
 	values        [][]T
