@@ -91,6 +91,16 @@ func GridFrom[T any](values [][]T) (Grid[T], error) {
 	return g, nil
 }
 
+// Copy returns a copy of the grid.
+func (g Grid[T]) Copy() Grid[T] {
+	values := make([][]T, len(g.values))
+	for i := range g.values {
+		values[i] = make([]T, len(g.values[i]))
+		copy(values[i], g.values[i])
+	}
+	return Grid[T]{width: g.width, height: g.height, values: values}
+}
+
 // ReadDigitGrid reads digit lists from r until EOF is encountered,
 // and creates a grid from them.
 func ReadGenericGrid[T any](r io.Reader, lineParser func(s string) ([]T, error)) (*Grid[T], error) {
