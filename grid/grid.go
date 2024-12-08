@@ -22,6 +22,11 @@ type Delta struct {
 	Dx, Dy int
 }
 
+func Diff(p1, p2 Point) Delta {
+	return D(int(p1.X)-int(p2.X), int(p1.Y)-int(p2.Y))
+
+}
+
 // D constructs a delta from two integers.
 func D(dx, dy int) Delta { return Delta{dx, dy} }
 
