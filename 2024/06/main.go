@@ -93,7 +93,7 @@ func step(g *grid.Grid[rune], start *grid.Point, visits *grid.Grid[visit]) (*gri
 	p := *start
 	guard := g.MustAt(p)
 
-	nextPoint, err := g.Delta(p, steps[guard])
+	nextPoint, err := g.Delta(p, grid.GeneralDirections[guard])
 	if err != nil {
 		// leaving the grid
 		g.Set(p, 'X')
@@ -119,13 +119,6 @@ func step(g *grid.Grid[rune], start *grid.Point, visits *grid.Grid[visit]) (*gri
 	g.Set(p, 'X')
 	g.Set(nextPoint, guard)
 	return &nextPoint, false
-}
-
-var steps = map[rune]grid.Delta{
-	'<': grid.D(-1, 0),
-	'^': grid.D(0, -1),
-	'>': grid.D(1, 0),
-	'v': grid.D(0, 1),
 }
 
 var rotations = map[rune]rune{
