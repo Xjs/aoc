@@ -42,6 +42,21 @@ func (g *Grid[T]) Delta(p Point, d Delta) (Point, error) {
 	return P(Coordinate(x), Coordinate(y)), nil
 }
 
+// DeltaWrap applies the delta to the given point, wrapping around if it would be out of bounds.
+func (g *Grid[T]) DeltaWrap(p Point, d Delta) Point {
+	x := (int(p.X) + d.Dx) % int(g.width)
+	y := (int(p.Y) + d.Dy) % int(g.height)
+
+	for x < 0 {
+		x += int(g.width)
+	}
+	for y < 0 {
+		y += int(g.height)
+	}
+
+	return P(Coordinate(x), Coordinate(y))
+}
+
 // P is a convenience constructor for Point.
 func P(x, y Coordinate) Point {
 	return Point{X: x, Y: y}
