@@ -62,13 +62,13 @@ func (pq *pq) pop() (id, float64) {
 
 // decrease modifies the priority and value of a point in the queue only if the priority is lower than the current priority.
 // It returns true if a modification was made.
-func (pq *pq) decrease(item id, priority float64) bool {
+func (pq *pq) decrease(item id, priority float64) (bool, bool) {
 	oldPrio := pq.priority[item]
 	if oldPrio < priority {
-		return false
+		return false, false
 	}
 	pq.update(item, priority)
-	return true
+	return true, oldPrio == priority
 }
 
 // update modifies the priority and value of an Item in the queue.

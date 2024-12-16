@@ -37,12 +37,12 @@ func NewUndirectedGraph[T any, W EdgeWeight](points []T, edges map[[2]int]W) Gra
 	}
 }
 
-// Dijkstra finds the shortest path from source to target and returns it as well as its weight.
-func Dijkstra[T any, W EdgeWeight](g Graph[T, W], source, target int) ([]int, W) {
+// Dijkstra finds the shortest paths from source to target and returns it as well as its weight.
+func Dijkstras[T any, W EdgeWeight](g Graph[T, W], source, target int) ([][]int, W) {
 	q := newPQ()
 	// unvisited := make(map[int]struct{})
 	// distances := make(map[int]float64)
-	previous := make(map[int]int)
+	previous := make(map[int][]int)
 
 	for i := range g.Points {
 		prio := math.Inf(1)
@@ -69,8 +69,12 @@ func Dijkstra[T any, W EdgeWeight](g Graph[T, W], source, target int) ([]int, W)
 		for nb, w := range g.Edges[int(current)] {
 			alt := curDist + float64(w)
 
-			if q.decrease(id(nb), alt) {
-				previous[nb] = int(current)
+			if change, equal := q.decrease(id(nb), alt); change {
+				if equal {
+					previous[nb] = append(previous[nb], int(current))
+				} else {
+					previous[nb] = []int{int(current)}
+				}
 			}
 		}
 
@@ -83,25 +87,28 @@ func Dijkstra[T any, W EdgeWeight](g Graph[T, W], source, target int) ([]int, W)
 		return nil, -1
 	}
 
-	hops := 0
-	for current := target; current != source; current = previous[current] {
-		hops++
-	}
-	hops++
-
-	path := make([]int, hops)
-	current := target
-	for i := hops - 1; i >= 0; i-- {
-		path[i] = current
-		current = previous[current]
-	}
-
+	gs := graphs(source, target, previous)
 	sum := W(0)
 	cur := source
-	for i := 1; i < len(path); i++ {
-		sum += g.Edges[cur][path[i]]
-		cur = path[i]
+	for i := 1; i < len(gs[0]); i++ {
+		next := gs[0][i]
+		sum += g.Edges[cur][next]
+		cur = next
 	}
 
-	return path, sum
+	return gs, sum
+}
+
+func graphs(source, target int, previous map[int][]int) [][]int {
+	if target == source {
+		return [][]int{{target}}
+	}
+
+	var result [][]int
+	for _, i := range previous[target] {
+		for _, path := range graphs(source, i, previous) {
+			result = append(result, append(path, target))
+		}
+	}
+	return result
 }

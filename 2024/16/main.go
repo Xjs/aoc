@@ -98,21 +98,32 @@ func main() {
 		targetIDs = append(targetIDs, nodeIDs[target][dir])
 	}
 
-	var shortestPath []int
+	var shortestPaths [][]int
 	shortestPathLength := -1
 	for _, targetID := range targetIDs {
-		path, length := graph.Dijkstra(gr, startID, targetID)
+		paths, length := graph.Dijkstras(gr, startID, targetID)
 		if shortestPathLength == -1 || length < shortestPathLength {
 			shortestPathLength = length
-			shortestPath = path
+			shortestPaths = paths
+		} else if length == shortestPathLength {
+			shortestPaths = append(shortestPaths, paths...)
 		}
 	}
 
 	log.Printf("part1: %d", shortestPathLength)
 
 	if debug {
-		printPath(nodes, shortestPath)
+		printPath(nodes, shortestPaths[0])
 	}
+
+	tiles := make(map[grid.Point]struct{})
+	for _, path := range shortestPaths {
+		for _, id := range path {
+			tiles[nodes[id].p] = struct{}{}
+		}
+	}
+
+	log.Printf("part2: %d", len(tiles))
 }
 
 var rotations = map[rune]rune{
