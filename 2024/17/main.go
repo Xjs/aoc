@@ -143,8 +143,8 @@ func (m *machine) combo(op int) int {
 type instruction func(int) bool
 
 func pow(a, b int) int {
-	product := a
-	for ; b > 1; b-- {
+	product := 1
+	for ; b > 0; b-- {
 		product *= a
 	}
 	return product

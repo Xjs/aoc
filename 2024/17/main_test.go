@@ -19,8 +19,7 @@ func Test_machine_exec(t *testing.T) {
 		{"ex4", []int{1, 7}, machine{B: 29}, machine{B: 26}},
 		{"ex5", []int{4, 0}, machine{B: 2024, C: 43690}, machine{B: 44354, C: 43690}},
 		{"ex6", []int{0, 1, 5, 4, 3, 0}, machine{A: 729}, machine{output: []int{4, 6, 3, 5, 6, 3, 5, 2, 1, 0}}},
-		// According to the website, this is wrong
-		{"prod", []int{2, 4, 1, 1, 7, 5, 1, 5, 4, 2, 5, 5, 0, 3, 3, 0}, machine{A: 28422061}, machine{B: 5, output: []int{3, 6, 7, 0, 5, 7, 3, 1, 5}}},
+		{"prod", []int{2, 4, 1, 1, 7, 5, 1, 5, 4, 2, 5, 5, 0, 3, 3, 0}, machine{A: 28422061}, machine{B: 5, output: []int{3, 6, 7, 0, 5, 7, 3, 1, 4}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
