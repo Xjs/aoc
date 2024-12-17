@@ -20,7 +20,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Print(m.String())
 	for m.exec() {
+		log.Print(m.String())
 	}
 
 	log.Printf("part1: %v", concatInts(m.output))
@@ -35,6 +38,10 @@ func concatInts(is []int) string {
 		b.WriteString(strconv.Itoa(x))
 	}
 	return b.String()
+}
+
+func (m *machine) String() string {
+	return fmt.Sprintf("A=%b B=%b C=%b i=%d output=%v", m.A, m.B, m.C, m.i, m.output)
 }
 
 func parseMachine(input string) (machine, error) {
@@ -114,9 +121,6 @@ func (m *machine) exec() bool {
 	if jump := m.instruction(p)(op); !jump {
 		m.i += 2
 	}
-
-	log.Print(p, op)
-	log.Print(m)
 
 	return true
 }
