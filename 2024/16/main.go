@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
 
 	"github.com/Xjs/aoc/graph"
@@ -101,7 +102,7 @@ func main() {
 	var shortestPaths [][]int
 	shortestPathLength := -1
 	for _, targetID := range targetIDs {
-		paths, length := graph.Dijkstras(gr, startID, targetID)
+		paths, length := graph.Dijkstras(gr, startID, targetID, math.MaxInt)
 		if shortestPathLength == -1 || length < shortestPathLength {
 			shortestPathLength = length
 			shortestPaths = paths

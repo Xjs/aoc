@@ -38,7 +38,7 @@ func NewUndirectedGraph[T any, W EdgeWeight](points []T, edges map[[2]int]W) Gra
 }
 
 // Dijkstra finds the shortest paths from source to target and returns it as well as its weight.
-func Dijkstras[T any, W EdgeWeight](g Graph[T, W], source, target int) ([][]int, W) {
+func Dijkstras[T any, W EdgeWeight](g Graph[T, W], source, target int, limit int) ([][]int, W) {
 	q := newPQ()
 	// unvisited := make(map[int]struct{})
 	// distances := make(map[int]float64)
@@ -87,7 +87,7 @@ func Dijkstras[T any, W EdgeWeight](g Graph[T, W], source, target int) ([][]int,
 		return nil, -1
 	}
 
-	gs := graphs(source, target, previous)
+	gs := graphs(source, target, previous, limit)
 	sum := W(0)
 	cur := source
 	for i := 1; i < len(gs[0]); i++ {
@@ -99,15 +99,18 @@ func Dijkstras[T any, W EdgeWeight](g Graph[T, W], source, target int) ([][]int,
 	return gs, sum
 }
 
-func graphs(source, target int, previous map[int][]int) [][]int {
+func graphs(source, target int, previous map[int][]int, limit int) [][]int {
 	if target == source {
 		return [][]int{{target}}
 	}
 
 	var result [][]int
 	for _, i := range previous[target] {
-		for _, path := range graphs(source, i, previous) {
+		for _, path := range graphs(source, i, previous, limit) {
 			result = append(result, append(path, target))
+			if len(result) >= limit {
+				return result
+			}
 		}
 	}
 	return result
