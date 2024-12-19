@@ -6,6 +6,7 @@ import (
 	"math"
 	"os"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -42,42 +43,20 @@ func main() {
 		log.Fatal(err)
 	}
 
-	possible := 0
-	all := 0
-	for i, t := range tasks {
-		if len(build(t, nil, patterns, maxLen)) != 0 {
-			log.Printf("%d: %q (%d), %d, %d", i, t, len(t), minLen, maxLen)
-			possible++
-			all += buildAll(t, patterns, maxLen)
+	t := time.Now()
+	possibleT := 0
+	allT := 0
+	for _, t := range tasks {
+		c := buildAll(t, patterns, maxLen)
+		if c > 0 {
+			possibleT++
 		}
+		allT += c
 	}
+	log.Printf("part1: %d", possibleT)
+	log.Printf("part2: %d", allT)
 
-	log.Printf("part1: %d", possible)
-	log.Printf("part2: %d", all)
-}
-
-func build(pattern string, state []string, patterns map[string]struct{}, maxLen int) []string {
-	if pattern == "" {
-		return state
-	}
-
-	for i := maxLen; i > 0; i-- {
-		if len(pattern) < i {
-			continue
-		}
-		pat := pattern[:i]
-		_, ok := patterns[pat]
-		if !ok {
-			continue
-		}
-
-		st := build(strings.TrimPrefix(pattern, pat), append(state, pat), patterns, maxLen)
-		if len(st) > 0 {
-			return st
-		}
-	}
-
-	return nil
+	log.Printf("%s", time.Since(t))
 }
 
 var lenCache = make(map[string]int)
