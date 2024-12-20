@@ -115,3 +115,11 @@ func graphs(source, target int, previous map[int][]int, limit int) [][]int {
 	}
 	return result
 }
+
+func (gr *Graph[T, W]) NEdges() int {
+	count := 0
+	for _, ed := range gr.Edges {
+		count += len(ed)
+	}
+	return count
+}
