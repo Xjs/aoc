@@ -26,9 +26,6 @@ func Test_complexity(t *testing.T) {
 }
 
 func Test_resolveArrows2one(t *testing.T) {
-	type args struct {
-		p string
-	}
 	tests := []struct {
 		name string
 		want string

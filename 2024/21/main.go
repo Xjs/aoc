@@ -126,21 +126,31 @@ func makeShortestPaths(pad grid.Grid[rune], pos map[rune]grid.Point) map[[2]rune
 func main() {
 	s := bufio.NewScanner(os.Stdin)
 	iter1 := 2
-	iter2 := 0 // TODO
+	iter2 := 25
 	sum := 0
 	sum2 := 0
+	sum22 := 0
 	for s.Scan() {
 		t := s.Text()
 		c := complexity(t, iter1)
 		sum += c
+		log.Printf("%s: %d", t, c)
 
 		c2 := complexity(t, iter2)
 		sum2 += c2
+		log.Printf("%s (%d): %d", t, iter2, c2)
 
-		log.Printf("%s: %d", t, c2)
+		// c3 := complexity2(t, iter2)
+		// sum22 += c3
+		// log.Printf("%s (%d, correct): %d", t, iter2, c3)
+
+		// if c2 != c3 {
+		// 	log.Fatalf("%s not correct", t)
+		// }
 	}
 	log.Printf("part1: %d", sum)
 	log.Printf("part2: %d", sum2)
+	log.Printf("part2_alt: %d", sum22)
 }
 
 func filterShortest(ps []string) []string {
@@ -174,13 +184,107 @@ func complexity(code string, iter int) int {
 		pathsArrow = resolveArrows(pathsArrow)
 	}
 
+	lim := iter
+	if lim > depth+1 {
+		lim = depth + 1
+	}
+
+	for i := 1; i < lim; i++ {
+		pathsArrow = resolveArrows2(pathsArrow)
+	}
+
+	shortest := math.MaxInt
+	for _, pp := range pathsArrow {
+		r := resolveArrows4(pp, iter-depth-1)
+		if r < shortest {
+			shortest = r
+		}
+	}
+
+	return n * shortest
+}
+
+func complexity2(code string, iter int) int {
+	n, err := strconv.Atoi(code[:len(code)-1])
+	if err != nil {
+		// meh, can't be bothered
+		panic(err)
+	}
+
+	pathsNum := resolve(numPos, shortestPathsNum, "A"+code)
+	var pathsArrow []string = pathsNum
+	for i := 0; i < 1; i++ {
+		pathsArrow = resolveArrows(pathsArrow)
+	}
+
 	for i := 1; i < iter; i++ {
 		pathsArrow = resolveArrows2(pathsArrow)
 	}
 	pathsArrow = filterShortest(pathsArrow)
-	// log.Printf("%s: %s", code, pathsArrow[0])
 
-	return len(pathsArrow[0]) * n
+	return n * len(pathsArrow[0])
+}
+
+type mem struct {
+	path string
+	iter int
+}
+
+var memo = make(map[mem]int)
+
+func resolveArrows3(path string, iter int) int {
+	if iter <= 0 {
+		return len(path)
+	}
+	if i, ok := memo[mem{path, iter}]; ok {
+		return i
+	}
+
+	sps := splitA(path)
+	if len(sps) == 1 {
+		res := resolveArrows3(resolveArrows2one(path), iter-1)
+		memo[mem{path, iter}] = res
+		return res
+	}
+
+	l := 0
+	for _, sp := range sps {
+		l += resolveArrows3(sp+"A", iter)
+	}
+
+	return l
+}
+
+const depth = 4
+
+func resolveArrows4(path string, iter int) int {
+
+	if iter <= 0 {
+		return len(path)
+	}
+	if i, ok := memo[mem{path, iter}]; ok {
+		return i
+	}
+	if iter%depth != 0 {
+		res := resolveArrows4(resolveArrows2one(path), iter-1)
+		memo[mem{path, iter}] = res
+		return res
+	}
+
+	sps := splitA(path)
+	if len(sps) == 1 {
+		np := filterShortest(resolveArrows2depth([]string{path}, depth))[0]
+		res := resolveArrows4(np, iter-depth)
+		memo[mem{path, iter}] = res
+		return res
+	}
+
+	l := 0
+	for _, sp := range sps {
+		l += resolveArrows3(sp+"A", iter)
+	}
+
+	return l
 }
 
 func resolveArrows2(ps []string) []string {
@@ -219,6 +323,46 @@ func resolveArrows2one(p string) string {
 	np := newP.String()
 	// log.Printf("result: %s", np)
 	return np
+}
+
+func resolveArrows2depth(ps []string, depth int) []string {
+	// log.Printf("input: %v (%q)", p, splitA(p))
+	if depth < 1 {
+		return ps
+	}
+
+	nps := make([][][]string, len(ps))
+	for i, p := range ps {
+		splits := splitA(p)
+		nps[i] = make([][]string, len(splits))
+		for j, sp := range splits {
+			nps[i][j] = make([]string, len(layer2phrases[sp]))
+			copy(nps[i][j], layer2phrases[sp])
+		}
+	}
+	return flatten(nps)
+}
+
+func flatten(nps [][][]string) []string {
+	var result []string
+	for _, nnps := range nps {
+		result = append(result, flatten2(nnps)...)
+	}
+	return result
+}
+
+func flatten2(nnps [][]string) []string {
+	if len(nnps) == 0 {
+		return []string{""}
+	}
+	start, nnps := nnps[0], nnps[1:]
+	var result []string
+	for _, st := range start {
+		for _, end := range flatten2(nnps) {
+			result = append(result, st+end)
+		}
+	}
+	return result
 }
 
 func resolveArrows(ps []string) []string {
