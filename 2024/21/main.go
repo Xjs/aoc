@@ -6,6 +6,7 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/Xjs/aoc/graph"
 	"github.com/Xjs/aoc/grid"
@@ -15,6 +16,9 @@ var numPos = make(map[rune]grid.Point)
 var arrowPos = make(map[rune]grid.Point)
 var shortestPathsNum map[[2]rune][][]grid.Delta
 var shortestPathsArrow map[[2]rune][][]grid.Delta
+
+var layer2phrases = make(map[string][]string)
+var shortestPathsNum2 = make(map[[2]rune]string)
 
 func init() {
 	numpad, err := grid.GridFrom[rune]([][]rune{
@@ -47,6 +51,45 @@ func init() {
 
 	shortestPathsNum = makeShortestPaths(numpad, numPos)
 	shortestPathsArrow = makeShortestPaths(arrowPad, arrowPos)
+
+	phrases := make(map[string][]string)
+	for _, sp := range shortestPathsNum {
+		for _, p := range sp {
+			phrases[toRunes(p)+"A"] = nil
+		}
+	}
+
+	for phrase := range phrases {
+		phrases[phrase] = resolve(arrowPos, shortestPathsArrow, phrase)
+	}
+
+	for n, sp := range shortestPathsNum {
+		var path string
+		for _, p := range sp {
+			pp := filterShortest(phrases[toRunes(p)+"A"])[0]
+			if path == "" || len(path) > len(pp) {
+				path = toRunes(p)
+			}
+		}
+		shortestPathsNum2[n] = path
+	}
+
+	for _, sp := range shortestPathsArrow {
+		for _, p := range sp {
+			cur := toRunes(p)
+			layer2phrases[cur] = filterShortest(resolve(arrowPos, shortestPathsArrow, "A"+cur+"A"))
+		}
+	}
+	layer2phrases[""] = []string{"A"}
+	// for _, paths := range phrases {
+	// 	for _, phrase := range paths {
+	// 		for _, sp := range strings.Split(phrase, "A") {
+	// 			layer2phrases[sp] = filterShortest(resolve(arrowPos, shortestPathsArrow, sp+"A"))
+	// 		}
+	// 	}
+	// }
+
+	// log.Print(layer2phrases)
 }
 
 func makeShortestPaths(pad grid.Grid[rune], pos map[rune]grid.Point) map[[2]rune][][]grid.Delta {
@@ -82,14 +125,22 @@ func makeShortestPaths(pad grid.Grid[rune], pos map[rune]grid.Point) map[[2]rune
 
 func main() {
 	s := bufio.NewScanner(os.Stdin)
+	iter1 := 2
+	iter2 := 0 // TODO
 	sum := 0
+	sum2 := 0
 	for s.Scan() {
 		t := s.Text()
-		c := complexity(t)
-		log.Printf("%s: %d", t, c)
+		c := complexity(t, iter1)
 		sum += c
+
+		c2 := complexity(t, iter2)
+		sum2 += c2
+
+		log.Printf("%s: %d", t, c2)
 	}
 	log.Printf("part1: %d", sum)
+	log.Printf("part2: %d", sum2)
 }
 
 func filterShortest(ps []string) []string {
@@ -110,7 +161,7 @@ func filterShortest(ps []string) []string {
 	return result
 }
 
-func complexity(code string) int {
+func complexity(code string, iter int) int {
 	n, err := strconv.Atoi(code[:len(code)-1])
 	if err != nil {
 		// meh, can't be bothered
@@ -119,12 +170,55 @@ func complexity(code string) int {
 
 	pathsNum := resolve(numPos, shortestPathsNum, "A"+code)
 	var pathsArrow []string = pathsNum
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 1; i++ {
 		pathsArrow = resolveArrows(pathsArrow)
 	}
+
+	for i := 1; i < iter; i++ {
+		pathsArrow = resolveArrows2(pathsArrow)
+	}
 	pathsArrow = filterShortest(pathsArrow)
+	// log.Printf("%s: %s", code, pathsArrow[0])
 
 	return len(pathsArrow[0]) * n
+}
+
+func resolveArrows2(ps []string) []string {
+	result := make([]string, len(ps))
+	for i, p := range ps {
+		result[i] = resolveArrows2one(p)
+	}
+	return result
+}
+
+func splitA(s string) []string {
+	var splices []string
+	for len(s) > 0 {
+		var i int
+		for i = 0; s[i] != 'A'; i++ {
+		}
+		splices = append(splices, s[:i])
+		s = s[i+1:]
+	}
+	return splices
+}
+
+func resolveArrows2one(p string) string {
+	// log.Printf("input: %v (%q)", p, splitA(p))
+	newP := new(strings.Builder)
+	for _, sp := range splitA(p) {
+		pp := layer2phrases[sp]
+		if pp == nil {
+			log.Fatal(sp)
+		}
+		if pp[0] == "" {
+			log.Fatal(sp)
+		}
+		newP.WriteString(layer2phrases[sp][0])
+	}
+	np := newP.String()
+	// log.Printf("result: %s", np)
+	return np
 }
 
 func resolveArrows(ps []string) []string {
@@ -221,7 +315,15 @@ func toRune(d grid.Delta) rune {
 	case grid.GeneralDirections['v']:
 		return 'v'
 	default:
-		log.Print(d)
+		log.Fatal(d)
 		return 'X'
 	}
+}
+
+func toRunes(ds []grid.Delta) string {
+	res := make([]rune, len(ds))
+	for i, d := range ds {
+		res[i] = toRune(d)
+	}
+	return string(res)
 }
