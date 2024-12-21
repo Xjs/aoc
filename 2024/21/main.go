@@ -11,8 +11,6 @@ import (
 	"github.com/Xjs/aoc/grid"
 )
 
-var numPos = make(map[rune]grid.Point)
-var arrowPos = make(map[rune]grid.Point)
 var shortestPathsNum map[[2]rune][][]grid.Delta
 var shortestPathsArrow map[[2]rune][][]grid.Delta
 
@@ -27,11 +25,6 @@ func init() {
 		log.Fatal(err)
 	}
 
-	numPos = make(map[rune]grid.Point)
-	numpad.Foreach(func(p grid.Point) {
-		numPos[numpad.MustAt(p)] = p
-	})
-
 	arrowPad, err := grid.GridFrom[rune]([][]rune{
 		{'#', '^', 'A'},
 		{'<', 'v', '>'},
@@ -40,22 +33,20 @@ func init() {
 		log.Fatal(err)
 	}
 
-	arrowPos = make(map[rune]grid.Point)
-	arrowPad.Foreach(func(p grid.Point) {
-		arrowPos[arrowPad.MustAt(p)] = p
-	})
-
-	shortestPathsNum = makeShortestPaths(numpad, numPos)
-	shortestPathsArrow = makeShortestPaths(arrowPad, arrowPos)
+	shortestPathsNum = makeShortestPaths(numpad)
+	shortestPathsArrow = makeShortestPaths(arrowPad)
 }
 
-func makeShortestPaths(pad grid.Grid[rune], pos map[rune]grid.Point) map[[2]rune][][]grid.Delta {
+func makeShortestPaths(pad grid.Grid[rune]) map[[2]rune][][]grid.Delta {
 	var runes []rune
+	pos := make(map[rune]grid.Point)
+
 	pad.Foreach(func(p grid.Point) {
 		r := pad.MustAt(p)
 		if r == '#' {
 			return
 		}
+		pos[r] = p
 		runes = append(runes, r)
 	})
 
@@ -111,7 +102,7 @@ func complexity(code string, iter int) int {
 		panic(err)
 	}
 
-	pathsNum := resolve(numPos, shortestPathsNum, "A"+code)
+	pathsNum := resolve(shortestPathsNum, "A"+code)
 	lowest := math.MaxInt
 	for _, path := range pathsNum {
 		pathCost := 0
@@ -133,7 +124,7 @@ func complexity(code string, iter int) int {
 	return n * lowest
 }
 
-func resolve(pos map[rune]grid.Point, s map[[2]rune][][]grid.Delta, code string) []string {
+func resolve(s map[[2]rune][][]grid.Delta, code string) []string {
 	if len(code) < 2 {
 		return []string{""}
 	}
@@ -157,7 +148,7 @@ func resolve(pos map[rune]grid.Point, s map[[2]rune][][]grid.Delta, code string)
 
 	var result []string
 	for _, p := range rr {
-		ps := resolve(pos, s, code[1:])
+		ps := resolve(s, code[1:])
 		for _, follow := range ps {
 			complete := append(p, []rune(follow)...)
 			result = append(result, string(complete))
