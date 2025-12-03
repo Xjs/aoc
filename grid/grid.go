@@ -270,3 +270,16 @@ func (g *Grid[T]) Foreach(f func(p Point)) {
 		}
 	}
 }
+
+// Lines returns the grid line by line.
+func (g *Grid[T]) Lines() [][]T {
+	lines := make([][]T, 0, g.height)
+	for y := Coordinate(0); y < g.height; y++ {
+		line := make([]T, 0, g.width)
+		for x := Coordinate(0); x < g.width; x++ {
+			line = append(line, g.MustAt(P(x, y)))
+		}
+		lines = append(lines, line)
+	}
+	return lines
+}
