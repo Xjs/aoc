@@ -43,4 +43,14 @@ func TestPart1(t *testing.T) {
 	if product != 40 {
 		t.Errorf("part1 example: got %d (%v), want 40", product, sizes)
 	}
+
+	circuits := 0
+	for _, size := range sizes {
+		if size > 0 {
+			circuits++
+		}
+	}
+	if circuits != 11 {
+		t.Errorf("part1 example: got %d circuits, want 11", circuits)
+	}
 }

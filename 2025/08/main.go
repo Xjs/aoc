@@ -151,8 +151,12 @@ func (c *collection) connect(id1, id2 int) bool {
 	if cid2 < cid1 {
 		newID, oldID = cid2, cid1
 	}
-	c.boxCircuit[id1] = newID
-	c.boxCircuit[id2] = newID
+	for bID, cID := range c.boxCircuit {
+		if cID == oldID {
+			c.boxCircuit[bID] = newID
+		}
+	}
+
 	c.circuitSizes[newID] += c.circuitSizes[oldID]
 	c.circuitSizes[oldID] = 0
 
