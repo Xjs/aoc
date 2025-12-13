@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"container/heap"
 	"errors"
 	"fmt"
@@ -138,29 +139,31 @@ func (c *collection) add(boxNew box) {
 	}
 }
 
-// connect connects the two boxes. If they are part of the same circuit, the function returns false (no connection).
+// connect connects the two boxes. If there are no other circuits left but this one, return true (stop connecting)
 func (c *collection) connect(id1, id2 int) bool {
 	cid1 := c.boxCircuit[id1]
 	cid2 := c.boxCircuit[id2]
-
-	if cid1 == cid2 {
-		return false
-	}
 
 	newID, oldID := cid1, cid2
 	if cid2 < cid1 {
 		newID, oldID = cid2, cid1
 	}
+
+	onlyOneCircuit := true
 	for bID, cID := range c.boxCircuit {
 		if cID == oldID {
 			c.boxCircuit[bID] = newID
+		} else if cID == newID {
+			continue
+		} else {
+			onlyOneCircuit = false
 		}
 	}
 
 	c.circuitSizes[newID] += c.circuitSizes[oldID]
 	c.circuitSizes[oldID] = 0
 
-	return true
+	return onlyOneCircuit
 }
 
 func parseBox(coords string) (box, error) {
@@ -214,6 +217,18 @@ func connectStraightLines(c *collection, nConnections int) {
 	}
 }
 
+// connectStraightLinesUntilDone connects the boxes until we only have one circuit left, and returns the pair
+// that was connected last
+func connectStraightLinesUntilDone(c *collection) *pair {
+	for {
+		p := heap.Pop(c.distHeap).(*pair)
+
+		if c.connect(p.id1, p.id2) {
+			return p
+		}
+	}
+}
+
 // sortedCircuitSizes returns the sizes of the circuits, sorted by size (descending)
 func (c *collection) sortedCircuitSizes() []int {
 	sizes := make([]int, 0, len(c.circuitSizes))
@@ -225,7 +240,8 @@ func (c *collection) sortedCircuitSizes() []int {
 }
 
 func main() {
-	coll, err := readCollection(os.Stdin)
+	input, err := io.ReadAll(os.Stdin)
+	coll, err := readCollection(bytes.NewReader(input))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -239,5 +255,11 @@ func main() {
 		product *= sizes[i]
 	}
 	log.Printf("part1: %d", product)
-	log.Println(coll.sortedCircuitSizes())
+
+	coll, err = readCollection(bytes.NewReader(input))
+	if err != nil {
+		log.Fatal(err)
+	}
+	p := connectStraightLinesUntilDone(coll)
+	log.Printf("part2: %d", p.b1.x*p.b2.x)
 }

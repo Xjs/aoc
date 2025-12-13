@@ -54,3 +54,17 @@ func TestPart1(t *testing.T) {
 		t.Errorf("part1 example: got %d circuits, want 11", circuits)
 	}
 }
+
+func TestPart2(t *testing.T) {
+	f, err := os.Open("testdata/example.txt")
+	if err != nil {
+		t.Fatalf("Open(testdata/example.txt) error = %v", err)
+	}
+	t.Cleanup(func() { f.Close() })
+	coll, err := readCollection(f)
+
+	p := connectStraightLinesUntilDone(coll)
+	if !equalsPair(p, box{216, 146, 977}, box{117, 168, 530}) {
+		t.Errorf("last pair is %v, which is not the expected one", p)
+	}
+}
