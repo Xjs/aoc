@@ -153,8 +153,8 @@ func (c *collection) connect(id1, id2 int) bool {
 	}
 	c.boxCircuit[id1] = newID
 	c.boxCircuit[id2] = newID
-	c.circuitSizes[newID]++
-	c.circuitSizes[oldID]--
+	c.circuitSizes[newID] += c.circuitSizes[oldID]
+	c.circuitSizes[oldID] = 0
 
 	return true
 }
@@ -202,13 +202,11 @@ func readCollection(r io.Reader) (*collection, error) {
 }
 
 func connectStraightLines(c *collection, nConnections int) {
-	connections := 0
-	for connections < nConnections {
+
+	for connections := 0; connections < nConnections; connections++ {
 		p := heap.Pop(c.distHeap).(*pair)
 
-		if c.connect(p.id1, p.id2) {
-			connections++
-		}
+		c.connect(p.id1, p.id2)
 	}
 }
 
